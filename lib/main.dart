@@ -30,30 +30,63 @@ class TodoApp extends StatefulWidget {
 }
 
 class _TodoAppState extends State<TodoApp> {
-  final List<Todo> _todos = [];
+  final List<Todo> _activeTodos = [];
+  final List<Todo> _completedTodos = [];
 
   void _addTodo(Todo todo) {
-    setState(() => _todos.add(todo));
+    setState(() => _activeTodos.add(todo));
   }
 
   void _updateTodo(Todo updated) {
     setState(() {
-      final index = _todos.indexWhere((t) => t.id == updated.id);
-      if (index != -1) _todos[index] = updated;
+      final activeIndex = _activeTodos.indexWhere((t) => t.id == updated.id);
+      if (activeIndex != -1) {
+        _activeTodos[activeIndex] = updated;
+        return;
+      }
+      final completedIndex =
+          _completedTodos.indexWhere((t) => t.id == updated.id);
+      if (completedIndex != -1) {
+        _completedTodos[completedIndex] = updated;
+      }
+    });
+  }
+
+  void _completeTodo(String id) {
+    setState(() {
+      final index = _activeTodos.indexWhere((t) => t.id == id);
+      if (index != -1) {
+        final todo = _activeTodos.removeAt(index);
+        _completedTodos.add(todo.copyWith(isCompleted: true));
+      }
     });
   }
 
   void _deleteTodo(String id) {
-    setState(() => _todos.removeWhere((t) => t.id == id));
+    setState(() {
+      _activeTodos.removeWhere((t) => t.id == id);
+      _completedTodos.removeWhere((t) => t.id == id);
+    });
+  }
+
+  void _reorderTodos(int oldIndex, int newIndex) {
+    setState(() {
+      if (newIndex > oldIndex) newIndex -= 1;
+      final todo = _activeTodos.removeAt(oldIndex);
+      _activeTodos.insert(newIndex, todo);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return TodoListView(
-      todos: _todos,
+      activeTodos: _activeTodos,
+      completedTodos: _completedTodos,
       onAdd: _addTodo,
       onUpdate: _updateTodo,
+      onComplete: _completeTodo,
       onDelete: _deleteTodo,
+      onReorder: _reorderTodos,
     );
   }
 }

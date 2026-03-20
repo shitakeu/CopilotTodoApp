@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
 import '../models/todo.dart';
 
+/// 編集ビューからの戻り値。[isCompleted] が true の場合は完了操作を表す。
+class TodoEditResult {
+  final Todo todo;
+  final bool isCompleted;
+  const TodoEditResult({required this.todo, this.isCompleted = false});
+}
+
 class TodoEditView extends StatefulWidget {
   final Todo todo;
   final VoidCallback onDelete;
@@ -51,8 +58,18 @@ class _TodoEditViewState extends State<TodoEditView> {
         deadline: _deadline,
         content: _contentController.text.trim(),
       );
-      Navigator.pop(context, updated);
+      Navigator.pop(context, TodoEditResult(todo: updated));
     }
+  }
+
+  void _complete() {
+    final updated = widget.todo.copyWith(
+      title: _titleController.text.trim(),
+      deadline: _deadline,
+      content: _contentController.text.trim(),
+      isCompleted: true,
+    );
+    Navigator.pop(context, TodoEditResult(todo: updated, isCompleted: true));
   }
 
   void _confirmDelete() {
@@ -81,12 +98,21 @@ class _TodoEditViewState extends State<TodoEditView> {
 
   @override
   Widget build(BuildContext context) {
+    final isAlreadyCompleted = widget.todo.isCompleted;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('TODO編集'),
         actions: [
+          if (!isAlreadyCompleted)
+            IconButton(
+              icon: const Icon(Icons.check_circle_outline),
+              tooltip: '完了にする',
+              onPressed: _complete,
+            ),
           IconButton(
             icon: const Icon(Icons.delete),
+            tooltip: '削除',
             onPressed: _confirmDelete,
           ),
         ],
